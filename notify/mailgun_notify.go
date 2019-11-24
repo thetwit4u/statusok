@@ -2,6 +2,7 @@ package notify
 
 import (
 	"errors"
+	"context"
 	"fmt"
 	"github.com/mailgun/mailgun-go"
 	"strings"
@@ -10,10 +11,9 @@ import (
 var mailGunClient mailgun.Mailgun
 
 type MailgunNotify struct {
-	Email        string `json:"email"`
-	ApiKey       string `json:"apiKey"`
-	Domain       string `json:"domain"`
-	PublicApiKey string `json:"publicApiKey"`
+	Email       string `json:"email"`
+	Domain      string `json:"domain"`
+	PrivateKey	string `json:"privateKey"`
 }
 
 func (mailgunNotify MailgunNotify) GetClientName() string {
@@ -25,19 +25,15 @@ func (mailgunNotify MailgunNotify) Initialize() error {
 		return errors.New("Mailgun: Invalid Email Address")
 	}
 
-	if len(strings.TrimSpace(mailgunNotify.ApiKey)) == 0 {
-		return errors.New("Mailgun: Invalid Api Key")
-	}
-
 	if len(strings.TrimSpace(mailgunNotify.Domain)) == 0 {
 		return errors.New("Mailgun: Invalid Domain name")
 	}
 
-	if len(strings.TrimSpace(mailgunNotify.PublicApiKey)) == 0 {
+	if len(strings.TrimSpace(mailgunNotify.PrivateKey)) == 0 {
 		return errors.New("Mailgun: Invalid PublicApiKey")
 	}
 
-	mailGunClient = mailgun.NewMailgun(mailgunNotify.Domain, mailgunNotify.ApiKey, mailgunNotify.PublicApiKey)
+	mailGunClient = mailgun.NewMailgun(mailgunNotify.Domain, mailgunNotify.PrivateKey)
 
 	return nil
 }
@@ -48,7 +44,7 @@ func (mailgunNotify MailgunNotify) SendResponseTimeNotification(responseTimeNoti
 	message := getMessageFromResponseTimeNotification(responseTimeNotification)
 
 	mail := mailGunClient.NewMessage("StatusOkNotifier <notify@StatusOk.com>", subject, message, fmt.Sprintf("<%s>", mailgunNotify.Email))
-	_, _, mailgunErr := mailGunClient.Send(mail)
+	_, _, mailgunErr := mailGunClient.Send(context.TODO(),mail)
 
 	if mailgunErr != nil {
 		return mailgunErr
@@ -63,7 +59,7 @@ func (mailgunNotify MailgunNotify) SendErrorNotification(errorNotification Error
 	message := getMessageFromErrorNotification(errorNotification)
 
 	mail := mailGunClient.NewMessage("StatusOkNotifier <notify@StatusOk.com>", subject, message, fmt.Sprintf("<%s>", mailgunNotify.Email))
-	_, _, mailgunErr := mailGunClient.Send(mail)
+	_, _, mailgunErr := mailGunClient.Send(context.TODO(), mail)
 
 	if mailgunErr != nil {
 		return mailgunErr

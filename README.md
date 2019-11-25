@@ -154,7 +154,7 @@ services:
   influxdb:
     image: tutum/influxdb:0.9
     environment:
-      - PRE_CREATE_DB="statusok" 
+      - INFLUXDB_DB="statusok" 
     ports:
       - 8083:8083 
       - 8086:8086
